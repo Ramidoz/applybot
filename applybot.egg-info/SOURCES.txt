@@ -1,0 +1,8 @@
+pyproject.toml
+applybot/__init__.py
+applybot.egg-info/PKG-INFO
+applybot.egg-info/SOURCES.txt
+applybot.egg-info/dependency_links.txt
+applybot.egg-info/entry_points.txt
+applybot.egg-info/requires.txt
+applybot.egg-info/top_level.txt

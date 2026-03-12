@@ -1,0 +1,2 @@
+[console_scripts]
+applybot = applybot.cli:cli
