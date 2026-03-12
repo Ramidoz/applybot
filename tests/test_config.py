@@ -1,12 +1,6 @@
 import json
 import pytest
-from applybot.config import load_config, save_config, validate_config, ConfigError
-
-REQUIRED_KEYS = [
-    "name", "email", "phone", "linkedin_url", "target_roles",
-    "remote_only", "salary_min", "salary_max", "master_resume",
-    "autofill", "score_threshold", "llm_provider",
-]
+from applybot.config import load_config, save_config, validate_config, ConfigError, REQUIRED_KEYS
 
 
 def test_load_config_reads_json(tmp_project):
@@ -45,6 +39,12 @@ def test_validate_config_empty_target_roles(sample_config):
 def test_validate_config_bad_score_threshold(sample_config):
     sample_config["score_threshold"] = 150
     with pytest.raises(ConfigError, match="score_threshold"):
+        validate_config(sample_config)
+
+
+def test_validate_config_invalid_llm_provider(sample_config):
+    sample_config["llm_provider"] = "gemini"
+    with pytest.raises(ConfigError, match="llm_provider"):
         validate_config(sample_config)
 
 
