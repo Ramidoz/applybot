@@ -18,10 +18,21 @@ def test_build_prompt_contains_resume():
     assert "Python expert resume" in prompt
 
 
+def test_build_prompt_contains_job_description():
+    prompt = _build_prompt("Why apply?", "exciting ML startup job", "my resume")
+    assert "exciting ML startup job" in prompt
+
+
 # --- answer_question: provider=none ---
 
 def test_answer_question_none_provider_returns_empty():
     config = {"llm_provider": "none"}
+    result = answer_question("What motivates you?", "job desc", "resume text", config)
+    assert result == ""
+
+
+def test_answer_question_unknown_provider_returns_empty():
+    config = {"llm_provider": "gemini"}
     result = answer_question("What motivates you?", "job desc", "resume text", config)
     assert result == ""
 

@@ -37,10 +37,9 @@ def answer_question(
             return _call_openai(prompt, config)
         elif provider == "custom":
             return _call_custom(prompt, config)
+        return ""  # unknown provider
     except Exception:
         return ""
-
-    return ""
 
 
 def _call_claude(prompt: str, config: dict[str, Any]) -> str:
