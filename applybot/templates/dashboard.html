@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ApplyBot Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #07070f; color: #e0e0e0; min-height: 100vh;
+  font-size: 15px;
+}
+.topbar {
+  background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.07);
+  padding: 16px 28px; display: flex; align-items: center; gap: 12px;
+}
+.logo { font-size: 20px; font-weight: 800; color: #a78bfa; }
+.last-run { font-size: 12px; color: #444; margin-left: auto; }
+.tabs { display: flex; gap: 0; padding: 0 28px; border-bottom: 1px solid rgba(255,255,255,0.07); margin-top: 8px; }
+.tab {
+  padding: 12px 20px; font-size: 13px; font-weight: 600; cursor: pointer;
+  border-bottom: 2px solid transparent; color: rgba(255,255,255,0.3);
+  transition: all 0.2s; user-select: none;
+}
+.tab.active { border-color: #a78bfa; color: #a78bfa; }
+.tab-panel { display: none; padding: 28px; }
+.tab-panel.active { display: block; }
+.stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 32px; }
+.stat-card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+}
+.stat-card.green::before { background: #34d399; }
+.stat-card.amber::before { background: #fbbf24; }
+.stat-card.red::before { background: #f87171; }
+.stat-card.purple::before { background: #a78bfa; }
+.stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #444; margin-bottom: 10px; }
+.stat-num { font-size: 36px; font-weight: 800; color: #fff; }
+.card {
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px; padding: 20px; margin-bottom: 16px;
+}
+.card-title { font-size: 17px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.card-sub { font-size: 13px; color: #555; margin-bottom: 14px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+  margin-bottom: 12px;
+}
+.badge.green { background: rgba(52,211,153,0.15); color: #34d399; }
+.badge.amber { background: rgba(251,191,36,0.15); color: #fbbf24; }
+.badge.red { background: rgba(248,113,113,0.15); color: #f87171; }
+.badge.gray { background: rgba(255,255,255,0.08); color: #666; }
+.badge.teal { background: rgba(56,189,248,0.15); color: #38bdf8; }
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn {
+  padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; text-decoration: none; display: inline-block;
+}
+.btn-primary { background: #a78bfa; color: #07070f; }
+.btn-secondary { background: rgba(255,255,255,0.08); color: #e0e0e0; }
+.btn:hover { opacity: 0.85; }
+.link-btn { color: #38bdf8; font-size: 12px; text-decoration: none; }
+.link-btn:hover { text-decoration: underline; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #444; border-bottom: 1px solid rgba(255,255,255,0.07); }
+td { padding: 14px; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+tr:hover td { background: rgba(255,255,255,0.02); cursor: pointer; }
+.empty-state { text-align: center; padding: 60px 20px; color: #444; font-size: 15px; line-height: 2; }
+[data-tooltip] { position: relative; cursor: help; }
+[data-tooltip]:hover::after {
+  content: attr(data-tooltip); position: absolute; bottom: 130%; left: 50%;
+  transform: translateX(-50%); background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1);
+  color: #e0e0e0; padding: 6px 10px; border-radius: 6px; font-size: 11px;
+  white-space: nowrap; z-index: 10; pointer-events: none;
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">✦ ApplyBot</div>
+  <div class="last-run" id="last-run"></div>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('overview')">📊 Overview</div>
+  <div class="tab" onclick="showTab('action')">👋 Needs Your Help</div>
+  <div class="tab" onclick="showTab('all')">📋 All Applications</div>
+</div>
+
+<div id="tab-overview" class="tab-panel active">
+  <div class="stats">
+    <div class="stat-card green"><div class="stat-label">Jobs Applied To</div><div class="stat-num" id="cnt-applied">0</div></div>
+    <div class="stat-card amber"><div class="stat-label">Needs Your Help</div><div class="stat-num" id="cnt-action">0</div></div>
+    <div class="stat-card red"><div class="stat-label">No Longer Available</div><div class="stat-num" id="cnt-expired">0</div></div>
+    <div class="stat-card purple"><div class="stat-label">Total Found</div><div class="stat-num" id="cnt-total">0</div></div>
+  </div>
+  <div id="timeline"></div>
+</div>
+
+<div id="tab-action" class="tab-panel">
+  <div id="action-cards"></div>
+</div>
+
+<div id="tab-all" class="tab-panel">
+  <div id="all-table-wrap"></div>
+</div>
+
+<script>
+const DATA = /*__APPLYBOT_DATA__*/ {"applications":[],"schema_version":"1.0"} /*__END__*/;
+
+const STATUS_LABELS = {
+  submitted:    {text: "✅ Applied!",                    cls: "green", tip: "Application submitted successfully."},
+  needs_action: {text: "👋 Needs Your Help",             cls: "amber", tip: "This job needs your attention — apply manually or resolve an issue."},
+  captcha:      {text: "🤖 CAPTCHA Blocked",             cls: "amber", tip: "The form had a CAPTCHA puzzle. Open the job and apply manually."},
+  ai_answered:  {text: "🤖 AI Filled — Review Recommended", cls: "teal", tip: "Applied! But some answers were filled by AI. Please review before the interview."},
+  failed:       {text: "❌ Something Went Wrong",         cls: "red",   tip: "Submission failed. Try applying manually using the links below."},
+  expired:      {text: "💨 Job No Longer Available",     cls: "red",   tip: "This job posting was removed or returned a 404 error."},
+  dry_run:      {text: "🧪 Test Run",                    cls: "gray",  tip: "Pipeline ran in test mode. No application was submitted."},
+};
+
+function badge(status) {
+  const s = STATUS_LABELS[status] || {text: status, cls: "gray", tip: ""};
+  return `<span class="badge ${s.cls}" data-tooltip="${s.tip}">${s.text}</span>`;
+}
+
+const apps = DATA.applications || [];
+
+document.getElementById("last-run").textContent = DATA.last_run ? "Last run: " + DATA.last_run : "";
+document.getElementById("cnt-applied").textContent  = apps.filter(a => ["submitted","ai_answered"].includes(a.status)).length;
+document.getElementById("cnt-action").textContent   = apps.filter(a => ["needs_action","captcha","failed"].includes(a.status)).length;
+document.getElementById("cnt-expired").textContent  = apps.filter(a => a.status === "expired").length;
+document.getElementById("cnt-total").textContent    = apps.filter(a => a.status !== "dry_run").length;
+
+// Timeline
+const timeline = document.getElementById("timeline");
+const recent = [...apps].sort((a,b) => (b.applied_date||"").localeCompare(a.applied_date||"")).slice(0,10);
+if (recent.length) {
+  timeline.innerHTML = "<h3 style='font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#444;margin-bottom:16px'>Recent Activity</h3>" +
+    recent.map(a => `<div class="card" style="padding:14px 20px;display:flex;align-items:center;gap:16px">
+      <div style="flex:1"><span style="font-size:15px;font-weight:700;color:#fff">${a.company}</span> <span style="color:#555;font-size:13px">— ${a.role}</span></div>
+      ${badge(a.status)}
+      <div style="font-size:12px;color:#444">${a.applied_date||"—"}</div>
+    </div>`).join("");
+} else {
+  timeline.innerHTML = `<div class="empty-state">🎉 No applications yet.<br><strong>Run <code>applybot run</code> to get started!</strong></div>`;
+}
+
+// Needs action tab
+const actionCards = document.getElementById("action-cards");
+const actionApps = apps.filter(a => ["needs_action","captcha","failed","ai_answered"].includes(a.status));
+if (actionApps.length) {
+  actionCards.innerHTML = actionApps.map(a => `
+    <div class="card">
+      <div class="card-title">${a.company} — ${a.role}</div>
+      <div class="card-sub">${a.platform || ""}</div>
+      ${badge(a.status)}
+      <div class="btn-row">
+        ${a.resume_path ? `<a class="btn btn-primary" href="${a.resume_path}" data-tooltip="Opens your tailored resume in Word or LibreOffice">Open Resume</a>` : ""}
+        ${a.cover_letter_path ? `<a class="btn btn-secondary" href="${a.cover_letter_path}" data-tooltip="Opens your tailored cover letter">Open Cover Letter</a>` : ""}
+        ${a.job_url ? `<a class="link-btn" href="${a.job_url}" target="_blank">View job posting ↗</a>` : ""}
+      </div>
+    </div>`).join("");
+} else {
+  actionCards.innerHTML = `<div class="empty-state">🎉 Nothing needs your attention right now!<br><strong>Run <code>applybot run</code> to find new jobs.</strong></div>`;
+}
+
+// All applications table
+const wrap = document.getElementById("all-table-wrap");
+if (apps.length) {
+  wrap.innerHTML = `<table>
+    <thead><tr><th>Company / Role</th><th>Status</th><th>Score</th><th>Applied</th><th>Follow-up</th></tr></thead>
+    <tbody>${apps.map(a => `<tr onclick="window.open('${a.job_url||""}','_blank')">
+      <td><strong>${a.company}</strong><br><span style="color:#555;font-size:12px">${a.role}</span></td>
+      <td>${badge(a.status)}</td>
+      <td>${a.score != null ? a.score + "/100" : "—"}</td>
+      <td>${a.applied_date||"—"}</td>
+      <td>${(a.follow_up_dates||[])[0]||"—"}</td>
+    </tr>`).join("")}</tbody>
+  </table>`;
+} else {
+  wrap.innerHTML = `<div class="empty-state">No applications yet — run <strong>applybot run</strong> to get started!</div>`;
+}
+
+function showTab(name) {
+  document.querySelectorAll(".tab").forEach((t,i) => t.classList.toggle("active", ["overview","action","all"][i] === name));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("active", p.id === "tab-"+name));
+}
+</script>
+</body>
+</html>
