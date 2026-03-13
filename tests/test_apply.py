@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import MagicMock, patch, call
 
-from applybot.apply import detect_platform, _fill_standard_fields, _handle_linkedin
+from applybot.apply import detect_platform, _fill_standard_fields, _handle_linkedin, _handle_greenhouse, _handle_lever
 from applybot.scraper import JobPost
 
 
@@ -120,3 +120,52 @@ def test_answer_custom_questions_calls_llm_and_fills_textarea():
 
     mock_aq.assert_called_once()
     textarea_mock.fill.assert_called_once_with("I love data science.")
+
+
+# --- _handle_greenhouse ---
+
+def test_handle_greenhouse_fills_and_submits():
+    page = MagicMock()
+    submit_btn = MagicMock()
+    submit_btn.count.return_value = 1
+    page.locator.return_value = submit_btn
+
+    job = JobPost(
+        title="Data Scientist", company="Acme",
+        url="https://boards.greenhouse.io/acme/jobs/123",
+        description="Python ML job", platform="greenhouse",
+    )
+    result = _handle_greenhouse(page, job, SAMPLE_CONFIG, "resume text")
+    assert result in ("submitted", "needs_action", "failed")
+
+
+# --- _handle_lever ---
+
+def test_handle_lever_fills_and_submits():
+    page = MagicMock()
+    apply_btn = MagicMock()
+    apply_btn.count.return_value = 1
+    page.locator.return_value = apply_btn
+
+    job = JobPost(
+        title="ML Engineer", company="Acme",
+        url="https://jobs.lever.co/acme/abc-123",
+        description="Python ML job", platform="lever",
+    )
+    result = _handle_lever(page, job, SAMPLE_CONFIG, "resume text")
+    assert result in ("submitted", "needs_action", "failed")
+
+
+def test_handle_lever_returns_needs_action_when_no_apply_button():
+    page = MagicMock()
+    no_btn = MagicMock()
+    no_btn.count.return_value = 0
+    page.locator.return_value = no_btn
+
+    job = JobPost(
+        title="ML Engineer", company="Acme",
+        url="https://jobs.lever.co/acme/abc-123",
+        description="Python ML job", platform="lever",
+    )
+    result = _handle_lever(page, job, SAMPLE_CONFIG, "resume text")
+    assert result == "needs_action"

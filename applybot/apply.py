@@ -17,13 +17,6 @@ def detect_platform(url: str) -> str:
     return "other"
 
 
-def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
-    """Returns status string. _page is injectable for testing (skips Playwright launch)."""
-    raise NotImplementedError(
-        "Browser automation not yet implemented. Run with --no-apply."
-    )
-
-
 # Maps config keys to common form field label patterns
 _FIELD_MAP = {
     "email": ["email", "e-mail"],
@@ -108,3 +101,62 @@ def _handle_linkedin(page: Any, job: JobPost, config: dict[str, Any], resume_tex
         return "needs_action"
     except Exception:
         return "failed"
+
+
+def _handle_greenhouse(page: Any, job: JobPost, config: dict[str, Any], resume_text: str) -> str:
+    """Handle Greenhouse application form. Returns status string."""
+    try:
+        page.goto(job.url, wait_until="domcontentloaded", timeout=15000)
+        page.wait_for_timeout(1000)
+
+        _fill_standard_fields(page, config)
+        _answer_custom_questions(page, job, config, resume_text)
+
+        submit_btn = page.locator(
+            "button[type='submit'], input[type='submit'], button:has-text('Submit')"
+        )
+        if submit_btn.count() > 0:
+            submit_btn.first.click()
+            page.wait_for_timeout(2000)
+            return "submitted"
+
+        return "needs_action"
+    except Exception:
+        return "failed"
+
+
+def _handle_lever(page: Any, job: JobPost, config: dict[str, Any], resume_text: str) -> str:
+    """Handle Lever application form. Returns status string."""
+    try:
+        page.goto(job.url, wait_until="domcontentloaded", timeout=15000)
+
+        apply_btn = page.locator(
+            "a:has-text('Apply'), button:has-text('Apply'), a[href*='apply']"
+        )
+        if apply_btn.count() == 0:
+            return "needs_action"
+
+        apply_btn.first.click()
+        page.wait_for_timeout(1000)
+
+        _fill_standard_fields(page, config)
+        _answer_custom_questions(page, job, config, resume_text)
+
+        submit_btn = page.locator(
+            "button[type='submit'], input[type='submit'], button:has-text('Submit')"
+        )
+        if submit_btn.count() > 0:
+            submit_btn.first.click()
+            page.wait_for_timeout(2000)
+            return "submitted"
+
+        return "needs_action"
+    except Exception:
+        return "failed"
+
+
+def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
+    """Returns status string. _page is injectable for testing (skips Playwright launch)."""
+    raise NotImplementedError(
+        "Browser automation not yet implemented. Run with --no-apply."
+    )
