@@ -2,7 +2,6 @@
 from __future__ import annotations
 import math
 import re
-from typing import Any
 
 from applybot.scraper import JobPost
 
@@ -27,7 +26,8 @@ def extract_keywords(text: str) -> set[str]:
     return {t for t in tokens if t not in STOP_WORDS}
 
 
-def _tfidf_score(doc_keywords: set[str], query_keywords: set[str]) -> float:
+def _keyword_overlap_score(doc_keywords: set[str], query_keywords: set[str]) -> float:
+    """Normalized keyword overlap: |intersection| / sqrt(|query|). Not full TF-IDF."""
     if not query_keywords:
         return 0.0
     overlap = doc_keywords & query_keywords
@@ -39,8 +39,8 @@ def score_job(job: JobPost, resume_text: str) -> float:
     resume_kws = extract_keywords(resume_text)
     jd_kws = extract_keywords(job.description + " " + job.title)
 
-    raw = _tfidf_score(resume_kws, jd_kws)
-    # Normalize to 0–100 with a sensible ceiling
+    raw = _keyword_overlap_score(resume_kws, jd_kws)
+    # Raw overlap for a strong match is ~0.7–0.85; * 120 maps that to 70–100 range
     score = min(100.0, raw * 120)
     return round(score, 1)
 
