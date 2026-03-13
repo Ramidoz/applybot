@@ -4,8 +4,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "applybot"
-version = "0.1.0"
+version = "1.0.0"
+description = "Automate your job search pipeline — scrape, score, generate tailored resumes, and auto-apply."
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.9"
+keywords = ["job-search", "automation", "resume", "linkedin", "playwright"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+]
 dependencies = [
     "click>=8.0",
     "prompt_toolkit>=3.0",
@@ -22,6 +37,14 @@ dev = ["pytest>=8.0", "pytest-cov", "responses>=0.25"]
 
 [project.scripts]
 applybot = "applybot.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/Ramidoz/applybot"
+Repository = "https://github.com/Ramidoz/applybot"
+"Bug Tracker" = "https://github.com/Ramidoz/applybot/issues"
+
+[tool.setuptools]
+packages = ["applybot"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
