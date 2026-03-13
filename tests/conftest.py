@@ -36,7 +36,7 @@ Software Engineer | jane@example.com
 Python, FastAPI, PostgreSQL, Docker, Kubernetes, AWS, Redis
 
 ## Experience
-### Senior Software Engineer — Acme Corp (2022–present)
+### Senior Software Engineer - Acme Corp (2022-present)
 - Built event-driven microservices in Python/FastAPI serving 5M req/day
 - Reduced P99 latency by 40% via Redis caching layer
 
