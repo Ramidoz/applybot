@@ -143,7 +143,7 @@ def _handle_lever(page: Any, job: JobPost, config: dict[str, Any], resume_text: 
         _answer_custom_questions(page, job, config, resume_text)
 
         submit_btn = page.locator(
-            "button[type='submit'], input[type='submit'], button:has-text('Submit')"
+            "button:has-text('Submit application'), button[type='submit'], input[type='submit']"
         )
         if submit_btn.count() > 0:
             submit_btn.first.click()

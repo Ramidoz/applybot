@@ -139,6 +139,21 @@ def test_handle_greenhouse_fills_and_submits():
     assert result in ("submitted", "needs_action", "failed")
 
 
+def test_handle_greenhouse_returns_needs_action_when_no_submit_button():
+    page = MagicMock()
+    no_btn = MagicMock()
+    no_btn.count.return_value = 0
+    page.locator.return_value = no_btn
+
+    job = JobPost(
+        title="Data Scientist", company="Acme",
+        url="https://boards.greenhouse.io/acme/jobs/123",
+        description="Python ML job", platform="greenhouse",
+    )
+    result = _handle_greenhouse(page, job, SAMPLE_CONFIG, "resume text")
+    assert result == "needs_action"
+
+
 # --- _handle_lever ---
 
 def test_handle_lever_fills_and_submits():
