@@ -66,12 +66,9 @@ def run_pipeline(
             console.rule("[bold purple][4/5] Submitting applications[/bold purple]")
             try:
                 status = submit_application(job, config)
-            except NotImplementedError:
-                status = "needs_action"
-                console.print(f"  [yellow]⚠ {job.company}: browser automation not available[/yellow]")
-            except Exception as e:
+            except Exception as exc:
                 status = "failed"
-                console.print(f"  [red]✕ {job.company}: {e}[/red]")
+                console.print(f"[red]  Application failed: {exc}[/red]")
         elif not dry_run and not no_apply:
             status = "needs_action"
 

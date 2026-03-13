@@ -1,5 +1,6 @@
 """Browser automation for form submission."""
 from __future__ import annotations
+from pathlib import Path
 from typing import Any
 
 from applybot.scraper import JobPost
@@ -156,7 +157,48 @@ def _handle_lever(page: Any, job: JobPost, config: dict[str, Any], resume_text: 
 
 
 def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
-    """Returns status string. _page is injectable for testing (skips Playwright launch)."""
-    raise NotImplementedError(
-        "Browser automation not yet implemented. Run with --no-apply."
-    )
+    """Submit a job application. Returns status string.
+
+    _page: injectable Playwright page for testing (skips browser launch when provided).
+    """
+    platform = detect_platform(job.url)
+
+    if _page is not None:
+        # Testing path — use the provided page directly
+        return _dispatch(platform, _page, job, config)
+
+    # Production path — launch Playwright
+    from playwright.sync_api import sync_playwright  # lazy import
+    cookies_path = Path("sessions") / "linkedin_cookies.json"
+
+    with sync_playwright() as pw:
+        browser = pw.chromium.launch(channel="chrome", headless=False)
+        context = browser.new_context()
+
+        # Load saved cookies if available
+        if cookies_path.exists():
+            import json
+            cookies = json.loads(cookies_path.read_text(encoding="utf-8"))
+            context.add_cookies(cookies)
+
+        page = context.new_page()
+        try:
+            result = _dispatch(platform, page, job, config)
+        finally:
+            context.close()
+            browser.close()
+
+    return result
+
+
+def _dispatch(platform: str, page: Any, job: JobPost, config: dict[str, Any]) -> str:
+    """Route to the correct platform handler."""
+    resume_text = config.get("resume_text", "")
+    if platform == "linkedin":
+        return _handle_linkedin(page, job, config, resume_text)
+    elif platform == "greenhouse":
+        return _handle_greenhouse(page, job, config, resume_text)
+    elif platform == "lever":
+        return _handle_lever(page, job, config, resume_text)
+    else:
+        return "needs_action"

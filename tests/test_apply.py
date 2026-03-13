@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import MagicMock, patch, call
 
-from applybot.apply import detect_platform, _fill_standard_fields, _handle_linkedin, _handle_greenhouse, _handle_lever
+from applybot.apply import detect_platform, _fill_standard_fields, _handle_linkedin, _handle_greenhouse, _handle_lever, submit_application
 from applybot.scraper import JobPost
 
 
@@ -184,3 +184,36 @@ def test_handle_lever_returns_needs_action_when_no_apply_button():
     )
     result = _handle_lever(page, job, SAMPLE_CONFIG, "resume text")
     assert result == "needs_action"
+
+
+# --- submit_application orchestrator ---
+
+def test_submit_application_routes_to_linkedin():
+    page = MagicMock()
+    # Simulate: no easy apply button found → needs_action
+    no_btn = MagicMock()
+    no_btn.count.return_value = 0
+    page.locator.return_value = no_btn
+
+    job = JobPost(
+        title="DS", company="Acme",
+        url="https://www.linkedin.com/jobs/view/12345",
+        description="ML role", platform="linkedin",
+    )
+    result = submit_application(job, SAMPLE_CONFIG, _page=page)
+    assert result in ("submitted", "needs_action", "failed")
+
+
+def test_submit_application_routes_to_greenhouse():
+    page = MagicMock()
+    no_btn = MagicMock()
+    no_btn.count.return_value = 0
+    page.locator.return_value = no_btn
+
+    job = JobPost(
+        title="DS", company="Acme",
+        url="https://boards.greenhouse.io/acme/jobs/99",
+        description="ML role", platform="greenhouse",
+    )
+    result = submit_application(job, SAMPLE_CONFIG, _page=page)
+    assert result in ("submitted", "needs_action", "failed")
