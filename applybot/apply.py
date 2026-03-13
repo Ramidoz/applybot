@@ -87,19 +87,31 @@ def _handle_linkedin(page: Any, job: JobPost, config: dict[str, Any], resume_tex
         easy_apply.first.click()
         page.wait_for_timeout(1000)
 
-        _fill_standard_fields(page, config)
+        # Multi-step modal: loop through Next buttons until Submit appears
+        max_steps = 10
+        for _ in range(max_steps):
+            _fill_standard_fields(page, config)
+            _answer_custom_questions(page, job, config, resume_text)
 
-        # Answer any open-text custom questions
-        _answer_custom_questions(page, job, config, resume_text)
+            submit_btn = page.locator(
+                "button[aria-label*='Submit application' i], button:has-text('Submit application')"
+            )
+            if submit_btn.count() > 0:
+                submit_btn.first.click()
+                page.wait_for_timeout(2000)
+                return "submitted"
 
-        # Submit
-        submit_btn = page.locator("button[aria-label*='Submit application' i], button:has-text('Submit application')")
-        if submit_btn.count() > 0:
-            submit_btn.first.click()
-            page.wait_for_timeout(2000)
-            return "submitted"
+            next_btn = page.locator(
+                "button[aria-label*='Continue to next step' i], button:has-text('Next')"
+            )
+            if next_btn.count() > 0:
+                next_btn.first.click()
+                page.wait_for_timeout(800)
+            else:
+                # No next and no submit — stuck or form not supported
+                return "needs_action"
 
-        return "needs_action"
+        return "needs_action"  # exceeded max_steps
     except Exception:
         return "failed"
 

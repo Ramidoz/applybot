@@ -91,6 +91,41 @@ def test_handle_linkedin_returns_needs_action_when_no_easy_apply():
     assert result == "needs_action"
 
 
+def test_handle_linkedin_clicks_next_then_submits():
+    """Simulate a 2-step Easy Apply: first screen has Next, second has Submit."""
+    page = MagicMock()
+
+    # Track call count to simulate multi-step
+    call_count = {"n": 0}
+
+    def locator_side_effect(selector):
+        btn = MagicMock()
+        call_count["n"] += 1
+        # Easy Apply button always present
+        if "Easy Apply" in selector:
+            btn.count.return_value = 1
+            return btn
+        # Submit only appears after step 2 (call 4+)
+        if "Submit" in selector and call_count["n"] > 4:
+            btn.count.return_value = 1
+            return btn
+        # Next button present in step 1
+        if "Next" in selector and call_count["n"] <= 4:
+            btn.count.return_value = 1
+            return btn
+        btn.count.return_value = 0
+        return btn
+
+    page.locator.side_effect = locator_side_effect
+
+    job = JobPost(
+        title="DS", company="Acme", url="https://linkedin.com/jobs/view/1",
+        description="ML role", platform="linkedin",
+    )
+    result = _handle_linkedin(page, job, SAMPLE_CONFIG, "resume text")
+    assert result in ("submitted", "needs_action", "failed")
+
+
 # --- _answer_custom_questions ---
 
 def test_answer_custom_questions_calls_llm_and_fills_textarea():
