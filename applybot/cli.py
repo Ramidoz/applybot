@@ -4,6 +4,11 @@ from rich.console import Console
 
 console = Console()
 
+try:
+    from playwright.sync_api import sync_playwright
+except ImportError:
+    sync_playwright = None  # type: ignore[assignment]
+
 
 @click.group()
 @click.version_option()
@@ -25,9 +30,34 @@ def init(project_dir):
 @click.argument("platform", type=click.Choice(["linkedin"]))
 def login(platform):
     """Save session cookies for a platform (one-time login)."""
+    import json
+    from pathlib import Path
+
     if platform == "linkedin":
+        if sync_playwright is None:
+            console.print("[red]Playwright is not installed. Run: pip install playwright && playwright install chromium[/red]")
+            return
+
         console.print("[yellow]Opening Chrome for LinkedIn login...[/yellow]")
-        console.print("[dim]Browser automation not yet implemented (Plan 2).[/dim]")
+        console.print("Log in at linkedin.com, then close the browser window.")
+        console.print("[dim]Cookies will be saved automatically on close.[/dim]")
+
+        sessions_dir = Path("sessions")
+        sessions_dir.mkdir(exist_ok=True)
+        cookies_path = sessions_dir / "linkedin_cookies.json"
+
+        with sync_playwright() as pw:
+            browser = pw.chromium.launch(channel="chrome", headless=False)
+            context = browser.new_context()
+            page = context.new_page()
+            page.goto("https://www.linkedin.com/login")
+            page.wait_for_event("close", timeout=300_000)
+            cookies = context.cookies()
+            context.close()
+            browser.close()
+
+        cookies_path.write_text(json.dumps(cookies, ensure_ascii=False), encoding="utf-8")
+        console.print(f"[green]Cookies saved to {cookies_path}[/green]")
 
 
 @cli.command()
