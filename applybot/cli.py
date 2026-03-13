@@ -35,7 +35,7 @@ def login(platform):
 
     if platform == "linkedin":
         if sync_playwright is None:
-            console.print("[red]Playwright is not installed. Run: pip install playwright && playwright install chromium[/red]")
+            console.print("[red]Playwright is not installed. Run: pip install playwright\nAlso ensure Google Chrome is installed (channel='chrome').[/red]")
             return
 
         console.print("[yellow]Opening Chrome for LinkedIn login...[/yellow]")

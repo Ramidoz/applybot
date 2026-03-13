@@ -15,10 +15,10 @@ from applybot.dashboard import build_dashboard, open_dashboard
 console = Console()
 
 
-def submit_application(job: JobPost, config: dict[str, Any]) -> str:
+def submit_application(job: JobPost, config: dict[str, Any], resume_text: str = "") -> str:
     """Wrapper — imports apply lazily to avoid requiring playwright for --no-apply mode."""
     from applybot.apply import submit_application as _submit
-    return _submit(job, config)
+    return _submit(job, config, resume_text=resume_text)
 
 
 def run_pipeline(
@@ -65,7 +65,7 @@ def run_pipeline(
         if not dry_run and not no_apply and config.get("autofill"):
             console.rule("[bold purple][4/5] Submitting applications[/bold purple]")
             try:
-                status = submit_application(job, config)
+                status = submit_application(job, config, resume_text=resume_text)
             except Exception as exc:
                 status = "failed"
                 console.print(f"[red]  Application failed: {exc}[/red]")

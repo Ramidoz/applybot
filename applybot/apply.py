@@ -156,7 +156,7 @@ def _handle_lever(page: Any, job: JobPost, config: dict[str, Any], resume_text: 
         return "failed"
 
 
-def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
+def submit_application(job: JobPost, config: dict[str, Any], resume_text: str = "", _page=None) -> str:
     """Submit a job application. Returns status string.
 
     _page: injectable Playwright page for testing (skips browser launch when provided).
@@ -165,7 +165,7 @@ def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
 
     if _page is not None:
         # Testing path — use the provided page directly
-        return _dispatch(platform, _page, job, config)
+        return _dispatch(platform, _page, job, config, resume_text)
 
     # Production path — launch Playwright
     from playwright.sync_api import sync_playwright  # lazy import
@@ -183,7 +183,7 @@ def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
 
         page = context.new_page()
         try:
-            result = _dispatch(platform, page, job, config)
+            result = _dispatch(platform, page, job, config, resume_text)
         finally:
             context.close()
             browser.close()
@@ -191,9 +191,8 @@ def submit_application(job: JobPost, config: dict[str, Any], _page=None) -> str:
     return result
 
 
-def _dispatch(platform: str, page: Any, job: JobPost, config: dict[str, Any]) -> str:
+def _dispatch(platform: str, page: Any, job: JobPost, config: dict[str, Any], resume_text: str = "") -> str:
     """Route to the correct platform handler."""
-    resume_text = config.get("resume_text", "")
     if platform == "linkedin":
         return _handle_linkedin(page, job, config, resume_text)
     elif platform == "greenhouse":
