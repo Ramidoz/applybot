@@ -41,7 +41,8 @@ def _fill_standard_fields(page: Any, config: dict[str, Any]) -> None:
             continue
         for label in labels:
             try:
-                locator = page.locator(f"input[placeholder*='{label}' i], input[aria-label*='{label}' i]")
+                safe_label = label.replace("'", "\\'")
+                locator = page.locator(f"input[placeholder*='{safe_label}' i], input[aria-label*='{safe_label}' i]")
                 if locator.count() > 0:
                     locator.first.fill(value)
                     break
@@ -60,9 +61,14 @@ def _answer_custom_questions(page: Any, job: JobPost, config: dict[str, Any], re
             ta = textareas.nth(i)
             label_text = ""
             try:
-                label_id = ta.get_attribute("aria-labelledby") or ta.get_attribute("id") or ""
-                if label_id:
-                    label_el = page.locator(f"label[for='{label_id}'], #{label_id}")
+                labelledby_id = ta.get_attribute("aria-labelledby") or ""
+                own_id = ta.get_attribute("id") or ""
+                if labelledby_id:
+                    label_el = page.locator(f"#{labelledby_id}")
+                    if label_el.count() > 0:
+                        label_text = label_el.first.inner_text()
+                elif own_id:
+                    label_el = page.locator(f"label[for='{own_id}']")
                     if label_el.count() > 0:
                         label_text = label_el.first.inner_text()
             except Exception:
