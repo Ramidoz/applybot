@@ -38,22 +38,6 @@ def _parse_markdown_resume(md_text: str) -> dict[str, Any]:
     return result
 
 
-def _extract_keywords_from_jd(jd: str, n: int = 8) -> list[str]:
-    """Return top n meaningful words from job description."""
-    words = re.findall(r"\b[A-Za-z][a-zA-Z+#.]{2,}\b", jd)
-    stop = {"the", "and", "for", "are", "you", "our", "will", "with", "that"}
-    filtered = [w for w in words if w.lower() not in stop]
-    seen: set[str] = set()
-    result = []
-    for w in filtered:
-        if w.lower() not in seen:
-            seen.add(w.lower())
-            result.append(w)
-        if len(result) >= n:
-            break
-    return result
-
-
 def generate_resume(
     job: JobPost,
     resume_text: str,
