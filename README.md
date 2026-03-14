@@ -1,3 +1,6 @@
+[![PyPI](https://img.shields.io/pypi/v/applybot)](https://pypi.org/project/applybot/)
+
+
 # ApplyBot
 
 Automate your job search pipeline — for any profession.
